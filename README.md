@@ -10,6 +10,23 @@ Born as the base of [flick-admin](https://github.com/one-more-refactor/flick-adm
 
 ## The idea
 
+```mermaid
+flowchart LR
+    subgraph you["your app supplies"]
+        auth["AuthProvider<br/>login · tokenLogin · check · logout"]
+        pages["Pages<br/>dashboard · resource · form"]
+    end
+    subgraph corepanel["corepanel renders"]
+        login["Login"] --> shell["Shell + nav<br/>hash routing, session persisted"]
+        shell --> dash["Dashboard<br/>stat · line · bar · list"]
+        shell --> res["ResourceView<br/>search · paging · actions"]
+        shell --> form["FormView<br/>text · textarea · toggle"]
+    end
+    auth --> login
+    pages --> shell
+    dash & res & form -- "session + your load()/save()" --> api["your API"]
+```
+
 You describe your admin surface as data; corepanel renders everything else (login, shell, nav, dashboards, tables, forms):
 
 ```ts
