@@ -1,0 +1,24 @@
+{
+  "name": "flick-admin",
+  "version": "0.1.0",
+  "description": "The flick server admin panel — corepanel + the flick admin API.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "corepanel": "github:one-more-refactor/corepanel#v0.1.0",
+    "svelte": "^5.36.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.1.0",
+    "svelte-check": "^4.2.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.3.0"
+  }
+}

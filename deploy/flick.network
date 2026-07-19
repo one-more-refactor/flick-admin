@@ -1,0 +1,4 @@
+# Quadlet network — ~/.config/containers/systemd/flick.network
+# Shared bridge so flick-admin can reach flick-backend by name.
+[Network]
+NetworkName=flick

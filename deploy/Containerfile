@@ -1,0 +1,16 @@
+# flick-admin — static panel + /api reverse proxy to the backend container.
+#   podman build -t flick-admin -f deploy/Containerfile .
+#   podman build -t flick-admin https://github.com/one-more-refactor/flick-admin.git -f deploy/Containerfile
+
+FROM docker.io/oven/bun:1 AS build
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile || bun install
+COPY . .
+RUN bun run build
+
+FROM docker.io/library/nginx:alpine
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html/
+EXPOSE 80

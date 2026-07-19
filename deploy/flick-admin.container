@@ -1,0 +1,17 @@
+# Quadlet unit — ~/.config/containers/systemd/flick-admin.container
+# The panel proxies /api to the backend container, so both join flick.network
+# and the backend must set ContainerName=flick-backend.
+[Unit]
+Description=flick admin panel (nginx static + api proxy)
+
+[Container]
+Image=localhost/flick-admin:latest
+ContainerName=flick-admin
+Network=flick.network
+PublishPort=127.0.0.1:3013:80
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
