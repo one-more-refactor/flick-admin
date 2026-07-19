@@ -1,0 +1,68 @@
+/* corepanel theme — one accent slot, monospace, square corners, hairlines.
+   Dark is the default (panels live in ops rooms); light follows the OS or an
+   explicit data-mode="light" on <html>. Override --cp-accent to brand it. */
+
+:root {
+  --cp-bg: #0d0b09;
+  --cp-panel: #14110d;
+  --cp-ink: #efe9df;
+  --cp-dim: #8c8378;
+  --cp-line: #262019;
+  --cp-accent: #f53b30;
+  --cp-ok: #7dae6b;
+  --cp-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --cp-bg: #f5f2ea;
+    --cp-panel: #ffffff;
+    --cp-ink: #1a1512;
+    --cp-dim: #8c8378;
+    --cp-line: #e7e1d6;
+    --cp-accent: #d8342b;
+    --cp-ok: #5c8a4a;
+  }
+}
+
+:root[data-mode='dark'] {
+  --cp-bg: #0d0b09;
+  --cp-panel: #14110d;
+  --cp-ink: #efe9df;
+  --cp-dim: #8c8378;
+  --cp-line: #262019;
+  --cp-accent: #f53b30;
+  --cp-ok: #7dae6b;
+}
+
+:root[data-mode='light'] {
+  --cp-bg: #f5f2ea;
+  --cp-panel: #ffffff;
+  --cp-ink: #1a1512;
+  --cp-dim: #8c8378;
+  --cp-line: #e7e1d6;
+  --cp-accent: #d8342b;
+  --cp-ok: #5c8a4a;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--cp-bg);
+  color: var(--cp-ink);
+  font-family: var(--cp-mono);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+  border-radius: 0 !important;
+}
+
+::selection {
+  background: var(--cp-accent);
+  color: var(--cp-bg);
+}

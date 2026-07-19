@@ -1,0 +1,31 @@
+{
+  "name": "corepanel",
+  "version": "0.1.0",
+  "description": "A small, strict admin-panel toolkit for Svelte 5 — providers in, panel out.",
+  "license": "MIT",
+  "type": "module",
+  "svelte": "./src/lib/index.ts",
+  "types": "./src/lib/index.ts",
+  "exports": {
+    ".": {
+      "svelte": "./src/lib/index.ts",
+      "types": "./src/lib/index.ts",
+      "default": "./src/lib/index.ts"
+    },
+    "./theme.css": "./src/lib/theme.css"
+  },
+  "files": [
+    "src/lib"
+  ],
+  "scripts": {
+    "check": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "svelte": "^5.0.0",
+    "svelte-check": "^4.0.0",
+    "typescript": "^5.6.0"
+  }
+}
