@@ -20,6 +20,18 @@ Built on [**corepanel**](https://github.com/one-more-refactor/corepanel) as a de
 <td width="50%"><img src="docs/screenshots/announcement.png" alt="announcement"></td>
 </tr></table>
 
+## How it runs
+
+```mermaid
+flowchart LR
+    op["operator"] -- "admin.myflick.app<br/>(or :8485 self-host)" --> n["nginx<br/>flick-admin container"]
+    n -- "static panel" --> op
+    n -- "proxy /api" --> b["flick-backend:8484<br/>shared podman/compose network"]
+    b --> db[("SQLite")]
+```
+
+Same-origin by design: the panel and its `/api` come from one host, so no CORS is needed. (Serving the panel elsewhere works too — set `FLICK_ADMIN_ORIGIN` on the backend.)
+
 ## Who can sign in
 
 1. **Admin users** — accounts with `is_admin` (flip it in the users table, or bootstrap below). Email + password; sessions expire after 12 h.
