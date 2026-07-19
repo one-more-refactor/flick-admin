@@ -1,6 +1,6 @@
 {
   "name": "flick-admin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "The flick server admin panel — corepanel + the flick admin API.",
   "license": "AGPL-3.0-only",
   "type": "module",
@@ -16,9 +16,9 @@
     "svelte": "^5.36.0"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^5.1.0",
+    "@sveltejs/vite-plugin-svelte": "^7",
     "svelte-check": "^4.2.0",
     "typescript": "^5.8.0",
-    "vite": "^6.3.0"
+    "vite": "^8"
   }
 }
