@@ -5,7 +5,7 @@
     "": {
       "name": "flick-admin",
       "dependencies": {
-        "corepanel": "github:one-more-refactor/corepanel#v0.1.0",
+        "corepanel": "github:one-more-refactor/corepanel#v0.1.1",
         "svelte": "^5.36.0",
       },
       "devDependencies": {
@@ -151,7 +151,7 @@
 
     "clsx": ["clsx@2.1.1", "", {}, "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="],
 
-    "corepanel": ["corepanel@github:one-more-refactor/corepanel#1fbbe2d", { "peerDependencies": { "svelte": "^5.0.0" } }, "one-more-refactor-corepanel-1fbbe2d", "sha512-IUua6bmPSQgKijMOUMtHgE7/LfaSk5tPkXE9DjnxpPPQPtJewITw5iVKw3L7zQ2RJoZILJCbpkAB8e9Olvxj3Q=="],
+    "corepanel": ["corepanel@github:one-more-refactor/corepanel#f8bb60c", { "peerDependencies": { "svelte": "^5.0.0" } }, "one-more-refactor-corepanel-f8bb60c", "sha512-guEIiWTgaEuxsSHrdONi5YKWCUs4pNFDUBWbCw1iiS9T6Ekt/7tlbw75JVFwhmRnMbetiBU7VdMncUbfPhCKSQ=="],
 
     "debug": ["debug@4.4.3", "", { "dependencies": { "ms": "^2.1.3" }, "peerDependencies": { "supports-color": "*" }, "optionalPeers": ["supports-color"] }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
 
