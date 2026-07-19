@@ -1,6 +1,6 @@
 {
   "name": "corepanel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A small, strict admin-panel toolkit for Svelte 5 — providers in, panel out.",
   "license": "MIT",
   "type": "module",
