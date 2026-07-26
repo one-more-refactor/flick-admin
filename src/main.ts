@@ -111,13 +111,18 @@ const config: PanelConfig = {
           { key: 'label', label: 'link label', type: 'text', placeholder: 'read more' },
           { key: 'active', label: 'published', type: 'toggle' },
         ],
-        save: (s, v) =>
-          put('/api/admin/announcement', s, {
-            text: v.text ?? '',
-            link: v.link ?? '',
-            label: v.label ?? '',
-            active: Boolean(v.active),
-          }),
+        save: (s, v) => {
+          const link = String((v as any).link ?? '').trim();
+          if (link && !/^(https?:\/\/|\/)/i.test(link)) {
+            throw new Error('Announcement link must start with http://, https://, or /');
+          }
+          return put('/api/admin/announcement', s, {
+            text: (v as any).text ?? '',
+            link,
+            label: (v as any).label ?? '',
+            active: Boolean((v as any).active),
+          });
+        },
       },
     },
   ],
