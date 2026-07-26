@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "corepanel": "github:one-more-refactor/corepanel#v0.1.1",
-    "svelte": "^5.36.0"
+    "svelte": "^5.56.8"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7",
