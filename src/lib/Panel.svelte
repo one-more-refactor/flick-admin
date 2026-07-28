@@ -49,6 +49,18 @@
     return () => window.removeEventListener('hashchange', onHash);
   });
 
+  // Automatically log out when the active session expires
+  $effect(() => {
+    if (!session || !session.expires_at) return;
+    const delay = session.expires_at * 1000 - Date.now();
+    if (delay <= 0) {
+      logout();
+      return;
+    }
+    const timer = setTimeout(logout, delay);
+    return () => clearTimeout(timer);
+  });
+
   function onlogin(s: Session) {
     session = s;
     localStorage.setItem(storeKey, JSON.stringify(s));
