@@ -66,7 +66,7 @@
 <div class="cp-res">
   <div class="cp-res-bar">
     {#if resource.searchable !== false}
-      <input class="cp-search" type="search" placeholder="search…" bind:value={q} oninput={onSearch} />
+      <input class="cp-search" type="search" placeholder="search…" bind:value={q} oninput={onSearch} maxlength="256" />
     {/if}
     <span class="cp-count" class:busy>{total} total</span>
   </div>

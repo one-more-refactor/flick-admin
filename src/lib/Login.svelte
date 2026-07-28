@@ -40,16 +40,16 @@
     {#if mode === 'password'}
       <label>
         <span>email</span>
-        <input type="email" bind:value={email} autocomplete="username" required />
+        <input type="email" bind:value={email} autocomplete="username" maxlength="320" required />
       </label>
       <label>
         <span>password</span>
-        <input type="password" bind:value={password} autocomplete="current-password" required />
+        <input type="password" bind:value={password} autocomplete="current-password" maxlength="256" required />
       </label>
     {:else}
       <label>
         <span>admin token</span>
-        <input type="password" bind:value={token} autocomplete="off" required />
+        <input type="password" bind:value={token} autocomplete="off" maxlength="2048" required />
       </label>
     {/if}
 
