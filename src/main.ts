@@ -111,13 +111,28 @@ const config: PanelConfig = {
           { key: 'label', label: 'link label', type: 'text', placeholder: 'read more' },
           { key: 'active', label: 'published', type: 'toggle' },
         ],
-        save: (s, v) =>
-          put('/api/admin/announcement', s, {
-            text: v.text ?? '',
-            link: v.link ?? '',
-            label: v.label ?? '',
-            active: Boolean(v.active),
-          }),
+        save: (s, v) => {
+          const rawLink = (v as any).link;
+          const link = typeof rawLink === 'string' ? rawLink.trim() : '';
+          if (link) {
+            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
+            const clean = link.toLowerCase();
+            if (
+              clean.startsWith('javascript:') ||
+              clean.startsWith('data:') ||
+              clean.startsWith('vbscript:') ||
+              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
+            ) {
+              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+            }
+          }
+          return put('/api/admin/announcement', s, {
+            text: (v as any).text ?? '',
+            link,
+            label: (v as any).label ?? '',
+            active: Boolean((v as any).active),
+          });
+        },
       },
     },
   ],
