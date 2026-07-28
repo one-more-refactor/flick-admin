@@ -49,15 +49,25 @@
     return () => window.removeEventListener('hashchange', onHash);
   });
 
-  // Automatically log out when the active session expires
+  // Log out the moment the session expires, not just on the next reload.
+  //
+  // setTimeout stores its delay in a signed 32-bit int, so anything past
+  // ~24.8 days overflows and fires immediately — a long-lived session would
+  // log you straight back out. Re-arm in chunks instead of trusting one
+  // enormous timer.
+  const MAX_TIMEOUT = 2_147_483_647;
   $effect(() => {
     if (!session || !session.expires_at) return;
-    const delay = session.expires_at * 1000 - Date.now();
-    if (delay <= 0) {
-      logout();
-      return;
-    }
-    const timer = setTimeout(logout, delay);
+    let timer: ReturnType<typeof setTimeout>;
+    const arm = () => {
+      const delay = session!.expires_at! * 1000 - Date.now();
+      if (delay <= 0) {
+        logout();
+        return;
+      }
+      timer = setTimeout(delay > MAX_TIMEOUT ? arm : logout, Math.min(delay, MAX_TIMEOUT));
+    };
+    arm();
     return () => clearTimeout(timer);
   });
 
