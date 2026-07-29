@@ -1,6 +1,6 @@
 {
   "name": "flick-admin",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "description": "The flick server admin panel — corepanel + the flick admin API.",
   "license": "AGPL-3.0-only",
   "type": "module",
