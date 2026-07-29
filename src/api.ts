@@ -13,7 +13,11 @@ async function req(
   body?: unknown
 ): Promise<any> {
   const headers: Record<string, string> = {};
-  if (session) headers.authorization = `Bearer ${session.token}`;
+  if (session) {
+    // Prevent CRLF / header injection in the Bearer token (no control characters, carriage returns, or line feeds)
+    const cleanToken = session.token.replace(/[\r\n\t\x00-\x1f\x7f]/g, '').trim();
+    headers.authorization = `Bearer ${cleanToken}`;
+  }
   if (body !== undefined) headers['content-type'] = 'application/json';
   const resp = await fetch(BASE + path, {
     method,

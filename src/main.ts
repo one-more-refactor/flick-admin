@@ -14,7 +14,20 @@ const config: PanelConfig = {
   footer: 'flick-admin · corepanel',
   auth: {
     async login(email, password): Promise<Session> {
-      const r = await post('/api/admin/login', null, { email, password });
+      if (typeof email !== 'string' || typeof password !== 'string') {
+        throw new Error('Invalid input types');
+      }
+      const trimmedEmail = email.trim();
+      if (!trimmedEmail) {
+        throw new Error('Email is required');
+      }
+      if (trimmedEmail.length > 320) {
+        throw new Error('Email is too long (maximum 320 characters)');
+      }
+      if (password.length > 128) {
+        throw new Error('Password is too long (maximum 128 characters)');
+      }
+      const r = await post('/api/admin/login', null, { email: trimmedEmail, password });
       return { token: r.token, label: r.email ?? r.name, expires_at: r.expires_at };
     },
     async tokenLogin(token): Promise<Session> {
@@ -59,7 +72,29 @@ const config: PanelConfig = {
       label: 'users',
       resource: {
         load: async (s, q) => {
-          const r = await get(`/api/admin/users?q=${encodeURIComponent(q.q)}&limit=${q.limit}&offset=${q.offset}`, s);
+          const rawQ = q.q;
+          const queryStr = typeof rawQ === 'string' ? rawQ : '';
+          if (queryStr.length > 255) {
+            throw new Error('Search query is too long (maximum 255 characters)');
+          }
+
+          let limit = Number(q.limit);
+          if (isNaN(limit) || limit < 0) {
+            limit = 20; // safe fallback
+          } else if (limit > 100) {
+            limit = 100; // enforce max 100
+          } else {
+            limit = Math.floor(limit);
+          }
+
+          let offset = Number(q.offset);
+          if (isNaN(offset) || offset < 0) {
+            offset = 0; // safe fallback
+          } else {
+            offset = Math.floor(offset);
+          }
+
+          const r = await get(`/api/admin/users?q=${encodeURIComponent(queryStr)}&limit=${limit}&offset=${offset}`, s);
           return { total: r.total, rows: r.users };
         },
         columns: [
@@ -112,8 +147,17 @@ const config: PanelConfig = {
           { key: 'active', label: 'published', type: 'toggle' },
         ],
         save: (s, v) => {
+          const rawText = (v as any).text;
+          const text = typeof rawText === 'string' ? rawText : '';
+          if (text.length > 1000) {
+            throw new Error('Message is too long (maximum 1000 characters)');
+          }
+
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
+          if (link.length > 2048) {
+            throw new Error('Link is too long (maximum 2048 characters)');
+          }
           if (link) {
             // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
             const clean = link.toLowerCase();
@@ -126,10 +170,17 @@ const config: PanelConfig = {
               throw new Error('Invalid URL format. Links must start with http://, https://, or /');
             }
           }
+
+          const rawLabel = (v as any).label;
+          const label = typeof rawLabel === 'string' ? rawLabel : '';
+          if (label.length > 100) {
+            throw new Error('Link label is too long (maximum 100 characters)');
+          }
+
           return put('/api/admin/announcement', s, {
-            text: (v as any).text ?? '',
+            text,
             link,
-            label: (v as any).label ?? '',
+            label,
             active: Boolean((v as any).active),
           });
         },
