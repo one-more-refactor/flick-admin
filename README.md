@@ -1,8 +1,8 @@
 # flick-admin
 
 [![ci](https://github.com/one-more-refactor/flick-admin/actions/workflows/ci.yml/badge.svg)](https://github.com/one-more-refactor/flick-admin/actions/workflows/ci.yml)
-[![release](https://img.shields.io/github/v/release/one-more-refactor/flick-admin?labelColor=111111&color=d32f2f)](https://github.com/one-more-refactor/flick-admin/releases/latest)
-[![license](https://img.shields.io/badge/license-AGPL--3.0-d32f2f?labelColor=111111)](LICENSE)
+[![release](https://img.shields.io/github/v/release/one-more-refactor/flick-admin?labelColor=111111&color=f2ede5)](https://github.com/one-more-refactor/flick-admin/releases/latest)
+[![license](https://img.shields.io/badge/license-AGPL--3.0-f2ede5?labelColor=111111)](LICENSE)
 
 The server admin panel for [**flick**](https://github.com/one-more-refactor/flick) — analytics, user management, events, and the user-site announcement banner. Fully isolated from the user app: its own repo, its own port, bearer-only auth against `/api/admin/*` ([CONTRACTS.md › Admin API](https://github.com/one-more-refactor/flick/blob/master/docs/CONTRACTS.md)).
 
