@@ -112,24 +112,46 @@ const config: PanelConfig = {
           { key: 'active', label: 'published', type: 'toggle' },
         ],
         save: (s, v) => {
+          const rawText = (v as any).text;
+          const text = typeof rawText === 'string' ? rawText.trim() : '';
+          if (text.length > 500) {
+            throw new Error('Message text cannot exceed 500 characters');
+          }
+
+          const rawLabel = (v as any).label;
+          const label = typeof rawLabel === 'string' ? rawLabel.trim() : '';
+          if (label.length > 50) {
+            throw new Error('Link label cannot exceed 50 characters');
+          }
+
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
           if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
-              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+            if (link.length > 1024) {
+              throw new Error('Link URL cannot exceed 1024 characters');
+            }
+            // Robust URL parsing & protocol validation to block malicious schemes (e.g. javascript:, data:, vbscript:)
+            if (link.startsWith('/')) {
+              // Valid relative URL path
+            } else {
+              try {
+                const parsed = new URL(link);
+                if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                  throw new Error('Only http://, https://, or relative / URLs are allowed');
+                }
+              } catch (e: any) {
+                if (e instanceof Error && e.message.includes('Only http://')) {
+                  throw e;
+                }
+                throw new Error('Invalid URL format. Absolute links must be valid URLs starting with http:// or https://');
+              }
             }
           }
+
           return put('/api/admin/announcement', s, {
-            text: (v as any).text ?? '',
+            text,
             link,
-            label: (v as any).label ?? '',
+            label,
             active: Boolean((v as any).active),
           });
         },
