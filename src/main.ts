@@ -112,11 +112,19 @@ const config: PanelConfig = {
           { key: 'active', label: 'published', type: 'toggle' },
         ],
         save: (s, v) => {
+          const text = typeof (v as any).text === 'string' ? (v as any).text : '';
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
+          const label = typeof (v as any).label === 'string' ? (v as any).label : '';
+
+          // Input length validation (prevent potential DoS / UI overflow)
+          if (text.length > 5000) throw new Error('Message is too long (max 5000 characters)');
+          if (link.length > 2048) throw new Error('Link is too long (max 2048 characters)');
+          if (label.length > 255) throw new Error('Link label is too long (max 255 characters)');
+
           if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
+            // Strip any browser-ignored characters (control chars, whitespaces) before verifying protocol to block XSS bypasses
+            const clean = link.replace(/[\x00-\x1F\x7F-\x9F\s]/g, '').toLowerCase();
             if (
               clean.startsWith('javascript:') ||
               clean.startsWith('data:') ||
@@ -127,9 +135,9 @@ const config: PanelConfig = {
             }
           }
           return put('/api/admin/announcement', s, {
-            text: (v as any).text ?? '',
+            text,
             link,
-            label: (v as any).label ?? '',
+            label,
             active: Boolean((v as any).active),
           });
         },
