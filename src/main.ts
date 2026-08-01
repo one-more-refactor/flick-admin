@@ -72,9 +72,9 @@ const config: PanelConfig = {
           { key: 'created_at', label: 'joined', render: (r) => new Date(r.created_at * 1000).toISOString().slice(0, 10) },
         ],
         actions: [
-          { label: 'make admin', when: (r) => !r.is_admin && !r.guest && r.email, run: (s, r) => patch(`/api/admin/users/${r.id}`, s, { is_admin: true }) },
-          { label: 'revoke admin', danger: true, when: (r) => r.is_admin, run: (s, r) => patch(`/api/admin/users/${r.id}`, s, { is_admin: false }) },
-          { label: 'delete', danger: true, run: (s, r) => del(`/api/admin/users/${r.id}`, s) },
+          { label: 'make admin', when: (r) => !r.is_admin && !r.guest && r.email, run: (s, r) => patch(`/api/admin/users/${encodeURIComponent(r.id)}`, s, { is_admin: true }) },
+          { label: 'revoke admin', danger: true, when: (r) => r.is_admin, run: (s, r) => patch(`/api/admin/users/${encodeURIComponent(r.id)}`, s, { is_admin: false }) },
+          { label: 'delete', danger: true, run: (s, r) => del(`/api/admin/users/${encodeURIComponent(r.id)}`, s) },
         ],
       },
     },
@@ -94,7 +94,7 @@ const config: PanelConfig = {
           { key: 'starts_at', label: 'starts', render: (r) => new Date(r.starts_at * 1000).toISOString().slice(0, 16).replace('T', ' ') },
           { key: 'ends_at', label: 'ends', render: (r) => new Date(r.ends_at * 1000).toISOString().slice(0, 16).replace('T', ' ') },
         ],
-        actions: [{ label: 'end event', danger: true, run: (s, r) => del(`/api/admin/events/${r.id}`, s) }],
+        actions: [{ label: 'end event', danger: true, run: (s, r) => del(`/api/admin/events/${encodeURIComponent(r.id)}`, s) }],
       },
     },
     {
@@ -112,8 +112,21 @@ const config: PanelConfig = {
           { key: 'active', label: 'published', type: 'toggle' },
         ],
         save: (s, v) => {
+          const text = typeof (v as any).text === 'string' ? (v as any).text.trim() : '';
+          const label = typeof (v as any).label === 'string' ? (v as any).label.trim() : '';
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
+
+          if (text.length > 5000) {
+            throw new Error('Message length exceeds the maximum limit of 5000 characters');
+          }
+          if (label.length > 100) {
+            throw new Error('Link label length exceeds the maximum limit of 100 characters');
+          }
+          if (link.length > 1000) {
+            throw new Error('Link length exceeds the maximum limit of 1000 characters');
+          }
+
           if (link) {
             // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
             const clean = link.toLowerCase();
@@ -127,9 +140,9 @@ const config: PanelConfig = {
             }
           }
           return put('/api/admin/announcement', s, {
-            text: (v as any).text ?? '',
+            text,
             link,
-            label: (v as any).label ?? '',
+            label,
             active: Boolean((v as any).active),
           });
         },
