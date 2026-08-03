@@ -1,7 +1,7 @@
 /** Thin fetch wrappers for the flick admin API (CONTRACTS.md "Admin API").
  *  Bearer-only: the panel never touches flick's cookie sessions. */
 
-import type { Session } from 'corepanel';
+import type { Session } from './lib/types';
 
 /** Same-origin by default (nginx proxies /api in prod, Vite in dev). */
 const BASE = import.meta.env.VITE_FLICK_API ?? '';

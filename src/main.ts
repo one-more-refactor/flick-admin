@@ -1,6 +1,6 @@
 import { mount } from 'svelte';
-import { Panel, type PanelConfig, type Session } from 'corepanel';
-import 'corepanel/theme.css';
+import { Panel, type PanelConfig, type Session } from './lib';
+import './lib/theme.css';
 import { get, post, put, patch, del } from './api';
 
 const day = (v: { day: string; value: number }) => ({ x: v.day.slice(5), y: v.value });

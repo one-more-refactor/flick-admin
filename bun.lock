@@ -5,7 +5,6 @@
     "": {
       "name": "flick-admin",
       "dependencies": {
-        "corepanel": "github:one-more-refactor/corepanel#v0.1.1",
         "svelte": "^5.56.8",
       },
       "devDependencies": {
@@ -90,8 +89,6 @@
     "chokidar": ["chokidar@4.0.3", "", { "dependencies": { "readdirp": "^4.0.1" } }, "sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA=="],
 
     "clsx": ["clsx@2.1.1", "", {}, "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="],
-
-    "corepanel": ["corepanel@github:one-more-refactor/corepanel#f8bb60c", { "peerDependencies": { "svelte": "^5.0.0" } }, "one-more-refactor-corepanel-f8bb60c"],
 
     "deepmerge": ["deepmerge@4.3.1", "", {}, "sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A=="],
 
