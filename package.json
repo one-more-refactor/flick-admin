@@ -1,7 +1,7 @@
 {
   "name": "flick-admin",
-  "version": "1.0.0",
-  "description": "The flick server admin panel — corepanel + the flick admin API.",
+  "version": "1.1.0",
+  "description": "The flick server admin panel — the corepanel toolkit (now in-tree at src/lib) + the flick admin API.",
   "license": "AGPL-3.0-only",
   "type": "module",
   "private": true,
@@ -12,7 +12,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "corepanel": "github:one-more-refactor/corepanel#v0.1.1",
     "svelte": "^5.56.8"
   },
   "devDependencies": {
