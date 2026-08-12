@@ -72,9 +72,9 @@ const config: PanelConfig = {
           { key: 'created_at', label: 'joined', render: (r) => new Date(r.created_at * 1000).toISOString().slice(0, 10) },
         ],
         actions: [
-          { label: 'make admin', when: (r) => !r.is_admin && !r.guest && r.email, run: (s, r) => patch(`/api/admin/users/${r.id}`, s, { is_admin: true }) },
-          { label: 'revoke admin', danger: true, when: (r) => r.is_admin, run: (s, r) => patch(`/api/admin/users/${r.id}`, s, { is_admin: false }) },
-          { label: 'delete', danger: true, run: (s, r) => del(`/api/admin/users/${r.id}`, s) },
+          { label: 'make admin', when: (r) => !r.is_admin && !r.guest && r.email, run: (s, r) => patch(`/api/admin/users/${encodeURIComponent(r.id)}`, s, { is_admin: true }) },
+          { label: 'revoke admin', danger: true, when: (r) => r.is_admin, run: (s, r) => patch(`/api/admin/users/${encodeURIComponent(r.id)}`, s, { is_admin: false }) },
+          { label: 'delete', danger: true, run: (s, r) => del(`/api/admin/users/${encodeURIComponent(r.id)}`, s) },
         ],
       },
     },
@@ -94,7 +94,7 @@ const config: PanelConfig = {
           { key: 'starts_at', label: 'starts', render: (r) => new Date(r.starts_at * 1000).toISOString().slice(0, 16).replace('T', ' ') },
           { key: 'ends_at', label: 'ends', render: (r) => new Date(r.ends_at * 1000).toISOString().slice(0, 16).replace('T', ' ') },
         ],
-        actions: [{ label: 'end event', danger: true, run: (s, r) => del(`/api/admin/events/${r.id}`, s) }],
+        actions: [{ label: 'end event', danger: true, run: (s, r) => del(`/api/admin/events/${encodeURIComponent(r.id)}`, s) }],
       },
     },
     {
