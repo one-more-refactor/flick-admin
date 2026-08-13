@@ -115,15 +115,17 @@ const config: PanelConfig = {
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
           if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
-              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+            try {
+              // Use standard URL parser to normalize and validate protocols to prevent XSS (e.g., javascript:, data:)
+              const parsed = new URL(link, window.location.origin);
+              if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                throw new Error('Invalid URL protocol. Links must use http: or https:');
+              }
+              if (!link.startsWith('http://') && !link.startsWith('https://') && !link.startsWith('/')) {
+                throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+              }
+            } catch (err) {
+              throw new Error(err instanceof Error ? err.message : 'Invalid URL format');
             }
           }
           return put('/api/admin/announcement', s, {
