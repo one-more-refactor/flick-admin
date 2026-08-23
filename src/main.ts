@@ -115,14 +115,17 @@ const config: PanelConfig = {
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
           if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
+            // Validate the URL protocol using standard URL constructor to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
+            try {
+              const url = new URL(link, window.location.origin);
+              const clean = link.toLowerCase();
+              if (
+                (url.protocol !== 'http:' && url.protocol !== 'https:') ||
+                (!clean.startsWith('/') && !clean.startsWith('http://') && !clean.startsWith('https://'))
+              ) {
+                throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+              }
+            } catch {
               throw new Error('Invalid URL format. Links must start with http://, https://, or /');
             }
           }
