@@ -3,6 +3,26 @@ import { Panel, type PanelConfig, type Session } from './lib';
 import './lib/theme.css';
 import { get, post, put, patch, del } from './api';
 
+export function validateAnnouncementUrl(link: string): void {
+  if (!link) return;
+  // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
+  const sanitized = link.replace(/[\x00-\x1F\x7F]/g, '');
+  try {
+    const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'http://localhost';
+    const url = new URL(sanitized, origin);
+    const isHttp = url.protocol === 'http:' || url.protocol === 'https:';
+    const isAllowedStart =
+      sanitized.startsWith('http://') ||
+      sanitized.startsWith('https://') ||
+      (sanitized.startsWith('/') && !sanitized.startsWith('//'));
+    if (!isHttp || !isAllowedStart) {
+      throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+    }
+  } catch {
+    throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+  }
+}
+
 const day = (v: { day: string; value: number }) => ({ x: v.day.slice(5), y: v.value });
 const fmt = (n: number) =>
   n >= 1_000_000 ? (n / 1_000_000).toFixed(1) + 'M' : n >= 10_000 ? (n / 1000).toFixed(1) + 'k' : String(n);
@@ -114,18 +134,7 @@ const config: PanelConfig = {
         save: (s, v) => {
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
-          if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
-              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
-            }
-          }
+          validateAnnouncementUrl(link);
           return put('/api/admin/announcement', s, {
             text: (v as any).text ?? '',
             link,
@@ -138,4 +147,6 @@ const config: PanelConfig = {
   ],
 };
 
-mount(Panel, { target: document.getElementById('app')!, props: { config } });
+if (typeof document !== 'undefined' && document.getElementById('app')) {
+  mount(Panel, { target: document.getElementById('app')!, props: { config } });
+}
