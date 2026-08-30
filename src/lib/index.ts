@@ -7,6 +7,7 @@ export { default as StatCard } from './widgets/StatCard.svelte';
 export { default as LineChart } from './widgets/LineChart.svelte';
 export { default as BarChart } from './widgets/BarChart.svelte';
 export { default as ListCard } from './widgets/ListCard.svelte';
+export { validateUrl } from './url';
 export type {
   AuthProvider,
   Session,
