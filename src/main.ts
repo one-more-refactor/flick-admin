@@ -3,6 +3,27 @@ import { Panel, type PanelConfig, type Session } from './lib';
 import './lib/theme.css';
 import { get, post, put, patch, del } from './api';
 
+export function validateLink(rawLink: unknown): string {
+  const link = typeof rawLink === 'string' ? rawLink.trim() : '';
+  if (!link) return '';
+
+  // Strip ASCII control characters and null bytes to prevent protocol bypasses (e.g. java\x00script:)
+  const clean = link.replace(/[\x00-\x1F\x7F]/g, '').trim();
+  try {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const parsed = new URL(clean, base);
+    if (
+      (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') ||
+      (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
+    ) {
+      throw new Error();
+    }
+    return clean;
+  } catch {
+    throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+  }
+}
+
 const day = (v: { day: string; value: number }) => ({ x: v.day.slice(5), y: v.value });
 const fmt = (n: number) =>
   n >= 1_000_000 ? (n / 1_000_000).toFixed(1) + 'M' : n >= 10_000 ? (n / 1000).toFixed(1) + 'k' : String(n);
@@ -113,19 +134,7 @@ const config: PanelConfig = {
         ],
         save: (s, v) => {
           const rawLink = (v as any).link;
-          const link = typeof rawLink === 'string' ? rawLink.trim() : '';
-          if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
-              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
-            }
-          }
+          const link = validateLink(rawLink);
           return put('/api/admin/announcement', s, {
             text: (v as any).text ?? '',
             link,
@@ -138,4 +147,7 @@ const config: PanelConfig = {
   ],
 };
 
-mount(Panel, { target: document.getElementById('app')!, props: { config } });
+const target = typeof document !== 'undefined' ? document.getElementById('app') : null;
+if (target) {
+  mount(Panel, { target, props: { config } });
+}
