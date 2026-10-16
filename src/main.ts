@@ -113,22 +113,28 @@ const config: PanelConfig = {
         ],
         save: (s, v) => {
           const rawLink = (v as any).link;
-          const link = typeof rawLink === 'string' ? rawLink.trim() : '';
-          if (link) {
+          const link = typeof rawLink === 'string' ? rawLink : '';
+          const sanitized = link.replace(/[\x00-\x1F\x7F]/g, '').trim();
+          if (sanitized) {
             // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
+            try {
+              const parsed = new URL(sanitized, window.location.origin);
+              const lower = sanitized.toLowerCase();
+              const isAllowedScheme =
+                (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+                (lower.startsWith('http://') ||
+                  lower.startsWith('https://') ||
+                  (sanitized.startsWith('/') && !sanitized.startsWith('//')));
+              if (!isAllowedScheme) {
+                throw new Error();
+              }
+            } catch {
               throw new Error('Invalid URL format. Links must start with http://, https://, or /');
             }
           }
           return put('/api/admin/announcement', s, {
             text: (v as any).text ?? '',
-            link,
+            link: sanitized,
             label: (v as any).label ?? '',
             active: Boolean((v as any).active),
           });
