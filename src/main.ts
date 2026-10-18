@@ -2,6 +2,7 @@ import { mount } from 'svelte';
 import { Panel, type PanelConfig, type Session } from './lib';
 import './lib/theme.css';
 import { get, post, put, patch, del } from './api';
+import { validateLink } from './lib/url';
 
 const day = (v: { day: string; value: number }) => ({ x: v.day.slice(5), y: v.value });
 const fmt = (n: number) =>
@@ -114,21 +115,10 @@ const config: PanelConfig = {
         save: (s, v) => {
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
-          if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
-              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
-            }
-          }
+          const validatedLink = validateLink(link);
           return put('/api/admin/announcement', s, {
             text: (v as any).text ?? '',
-            link,
+            link: validatedLink,
             label: (v as any).label ?? '',
             active: Boolean((v as any).active),
           });
@@ -138,4 +128,9 @@ const config: PanelConfig = {
   ],
 };
 
-mount(Panel, { target: document.getElementById('app')!, props: { config } });
+if (typeof document !== 'undefined') {
+  const target = document.getElementById('app');
+  if (target) {
+    mount(Panel, { target, props: { config } });
+  }
+}
