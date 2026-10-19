@@ -9,6 +9,28 @@ const fmt = (n: number) =>
 const uptime = (s: number) =>
   s >= 86_400 ? `${Math.floor(s / 86_400)}d ${Math.floor((s % 86_400) / 3600)}h` : `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
 
+/**
+ * Validates link protocol against XSS (e.g. javascript:, data:, vbscript:),
+ * stripping ASCII control characters and null bytes prior to URL construction.
+ */
+export function validateAnnouncementUrl(link: string): boolean {
+  const sanitized = link.replace(/[\x00-\x1F\x7F]/g, '');
+  if (
+    !sanitized.startsWith('http://') &&
+    !sanitized.startsWith('https://') &&
+    !sanitized.startsWith('/')
+  ) {
+    return false;
+  }
+  try {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const parsed = new URL(sanitized, base);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 const config: PanelConfig = {
   title: 'flick admin',
   footer: 'flick-admin · corepanel',
@@ -114,17 +136,8 @@ const config: PanelConfig = {
         save: (s, v) => {
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
-          if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
-              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
-            }
+          if (link && !validateAnnouncementUrl(link)) {
+            throw new Error('Invalid URL format. Links must start with http://, https://, or /');
           }
           return put('/api/admin/announcement', s, {
             text: (v as any).text ?? '',
@@ -138,4 +151,9 @@ const config: PanelConfig = {
   ],
 };
 
-mount(Panel, { target: document.getElementById('app')!, props: { config } });
+if (typeof document !== 'undefined') {
+  const target = document.getElementById('app');
+  if (target) {
+    mount(Panel, { target, props: { config } });
+  }
+}
