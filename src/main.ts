@@ -9,6 +9,33 @@ const fmt = (n: number) =>
 const uptime = (s: number) =>
   s >= 86_400 ? `${Math.floor(s / 86_400)}d ${Math.floor((s % 86_400) / 3600)}h` : `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
 
+/**
+ * Validates and cleans user-supplied URLs to prevent XSS attacks (e.g. javascript:, data:, vbscript:)
+ * Strips ASCII control characters and null bytes (\x00-\x1F\x7F) before standard URL parsing.
+ */
+export function validateUrl(link: string): string {
+  const trimmed = link.trim();
+  if (!trimmed) return '';
+
+  const clean = trimmed.replace(/[\x00-\x1F\x7F]/g, '');
+
+  if (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/')) {
+    throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+  }
+
+  try {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const parsed = new URL(clean, base);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+    }
+  } catch {
+    throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+  }
+
+  return clean;
+}
+
 const config: PanelConfig = {
   title: 'flick admin',
   footer: 'flick-admin · corepanel',
@@ -113,19 +140,7 @@ const config: PanelConfig = {
         ],
         save: (s, v) => {
           const rawLink = (v as any).link;
-          const link = typeof rawLink === 'string' ? rawLink.trim() : '';
-          if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
-              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
-            }
-          }
+          const link = typeof rawLink === 'string' ? validateUrl(rawLink) : '';
           return put('/api/admin/announcement', s, {
             text: (v as any).text ?? '',
             link,
@@ -138,4 +153,9 @@ const config: PanelConfig = {
   ],
 };
 
-mount(Panel, { target: document.getElementById('app')!, props: { config } });
+if (typeof document !== 'undefined') {
+  const target = document.getElementById('app');
+  if (target) {
+    mount(Panel, { target, props: { config } });
+  }
+}
