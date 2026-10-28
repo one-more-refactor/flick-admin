@@ -115,14 +115,23 @@ const config: PanelConfig = {
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
           if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
+            // Validate the URL protocol to prevent XSS attacks and open redirects.
+            // Strip control characters and null bytes before parsing with standard URL constructor.
+            const clean = link.replace(/[\x00-\x1F\x7F]/g, '').trim();
+            const lower = clean.toLowerCase();
+            const isHttp = lower.startsWith('http://');
+            const isHttps = lower.startsWith('https://');
+            const isRelative = clean.startsWith('/') && !clean.startsWith('//');
+            if (!isHttp && !isHttps && !isRelative) {
+              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+            }
+            try {
+              const base = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'http://localhost';
+              const parsed = new URL(clean, base);
+              if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+              }
+            } catch {
               throw new Error('Invalid URL format. Links must start with http://, https://, or /');
             }
           }
