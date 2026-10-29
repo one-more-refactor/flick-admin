@@ -3,6 +3,25 @@ import { Panel, type PanelConfig, type Session } from './lib';
 import './lib/theme.css';
 import { get, post, put, patch, del } from './api';
 
+export function validateUrl(link: string): void {
+  const sanitized = link.replace(/[\x00-\x1F\x7F]/g, '').trim();
+  if (!sanitized) return;
+  try {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const parsed = new URL(sanitized, origin);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new Error('Invalid URL format');
+    }
+    const isHttp = sanitized.toLowerCase().startsWith('http://') || sanitized.toLowerCase().startsWith('https://');
+    const isRelative = sanitized.startsWith('/') && !sanitized.startsWith('//');
+    if (!isHttp && !isRelative) {
+      throw new Error('Invalid URL format');
+    }
+  } catch {
+    throw new Error('Invalid URL format. Links must start with http://, https://, or /');
+  }
+}
+
 const day = (v: { day: string; value: number }) => ({ x: v.day.slice(5), y: v.value });
 const fmt = (n: number) =>
   n >= 1_000_000 ? (n / 1_000_000).toFixed(1) + 'M' : n >= 10_000 ? (n / 1000).toFixed(1) + 'k' : String(n);
@@ -115,16 +134,7 @@ const config: PanelConfig = {
           const rawLink = (v as any).link;
           const link = typeof rawLink === 'string' ? rawLink.trim() : '';
           if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
-              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
-            }
+            validateUrl(link);
           }
           return put('/api/admin/announcement', s, {
             text: (v as any).text ?? '',
@@ -138,4 +148,7 @@ const config: PanelConfig = {
   ],
 };
 
-mount(Panel, { target: document.getElementById('app')!, props: { config } });
+if (typeof document !== 'undefined') {
+  const target = document.getElementById('app');
+  if (target) mount(Panel, { target, props: { config } });
+}

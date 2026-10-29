@@ -1,3 +1,8 @@
+## 2025-03-03 - [Robust Client-Side URL Protocol Validation for XSS Prevention]
+**Vulnerability:** String prefix checks (e.g. `startsWith('javascript:')`) for validating URL links can be bypassed or misclassify input when control characters (`\x00-\x1F`, `\x7F`) or unexpected relative link formats (e.g. `//`) are supplied.
+**Learning:** String prefix checks fail to match standard browser URL parsing and resolution semantics.
+**Prevention:** Strip ASCII control characters and null bytes (`/[\x00-\x1F\x7F]/g`) and parse using standard `new URL(sanitized, origin)` constructor while enforcing strict protocol and relative path boundaries.
+
 ## 2025-03-01 - [Nginx Header Inheritance and Missing Content Security Policy]
 **Vulnerability:** Nginx configuration did not have a Content Security Policy (CSP). Additionally, Nginx does not inherit `add_header` directives into nested locations that define their own headers, creating a risk of missing security headers on custom route handlers or static asset locations if they are not explicitly repeated.
 **Learning:** Whenever an `add_header` is declared within a `location` block in Nginx, any outer `add_header` directives (such as those in the `server` block) are not inherited.
