@@ -2,6 +2,7 @@ import { mount } from 'svelte';
 import { Panel, type PanelConfig, type Session } from './lib';
 import './lib/theme.css';
 import { get, post, put, patch, del } from './api';
+import { buildAnnouncement, LIMITS } from './announcement';
 
 const day = (v: { day: string; value: number }) => ({ x: v.day.slice(5), y: v.value });
 const fmt = (n: number) =>
@@ -15,7 +16,7 @@ const config: PanelConfig = {
   auth: {
     async login(email, password): Promise<Session> {
       const r = await post('/api/admin/login', null, { email, password });
-      return { token: r.token, label: r.email ?? r.name, expires_at: r.expires_at };
+      return { token: r.token, label: r.email ?? r.name ?? email, expires_at: r.expires_at };
     },
     async tokenLogin(token): Promise<Session> {
       const me = await get('/api/admin/me', { token, label: '' });
@@ -106,33 +107,14 @@ const config: PanelConfig = {
           'Shown as a banner on the user site while published. Dismissals are per content — editing the text brings it back for everyone.',
         load: (s) => get('/api/admin/announcement', s),
         fields: [
-          { key: 'text', label: 'message', type: 'textarea', placeholder: 'what changed?' },
-          { key: 'link', label: 'link (optional)', type: 'text', placeholder: 'https://…' },
-          { key: 'label', label: 'link label', type: 'text', placeholder: 'read more' },
+          { key: 'text', label: 'message', type: 'textarea', placeholder: 'what changed?', maxlength: LIMITS.text },
+          { key: 'link', label: 'link (optional)', type: 'text', placeholder: 'https://…', maxlength: LIMITS.link },
+          { key: 'label', label: 'link label', type: 'text', placeholder: 'read more', maxlength: LIMITS.label },
           { key: 'active', label: 'published', type: 'toggle' },
         ],
-        save: (s, v) => {
-          const rawLink = (v as any).link;
-          const link = typeof rawLink === 'string' ? rawLink.trim() : '';
-          if (link) {
-            // Validate the URL protocol to prevent XSS attacks (e.g., javascript:, data:, vbscript:)
-            const clean = link.toLowerCase();
-            if (
-              clean.startsWith('javascript:') ||
-              clean.startsWith('data:') ||
-              clean.startsWith('vbscript:') ||
-              (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('/'))
-            ) {
-              throw new Error('Invalid URL format. Links must start with http://, https://, or /');
-            }
-          }
-          return put('/api/admin/announcement', s, {
-            text: (v as any).text ?? '',
-            link,
-            label: (v as any).label ?? '',
-            active: Boolean((v as any).active),
-          });
-        },
+        // Validated client-side against the backend's own rules (length caps,
+        // absolute http(s) link, no control characters) — see src/announcement.ts.
+        save: (s, v) => put('/api/admin/announcement', s, buildAnnouncement(v)),
       },
     },
   ],
