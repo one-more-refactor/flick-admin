@@ -9,14 +9,26 @@
   let saved = $state(false);
   let busy = $state(false);
 
+  /** Defaults when a field sets no maxlength — generous, but finite. */
+  const MAX_TEXT = 1024;
+  const MAX_TEXTAREA = 65536;
+
   $effect(() => {
+    let active = true;
     form
       .load(session)
       .then((v) => {
+        if (!active) return;
         values = { ...v };
         loaded = true;
       })
-      .catch((err) => (error = err instanceof Error ? err.message : 'load failed'));
+      .catch((err) => {
+        if (!active) return;
+        error = err instanceof Error ? err.message : 'load failed';
+      });
+    return () => {
+      active = false;
+    };
   });
 
   async function save(e: SubmitEvent) {
@@ -36,8 +48,14 @@
   }
 </script>
 
-{#if !loaded && !error}
-  <p class="cp-loading">loading…</p>
+{#if !loaded}
+  <!-- Never render the form before its current values arrived: saving an
+       empty form after a failed load would wipe the stored values. -->
+  {#if error}
+    <p class="cp-error" role="alert">{error}</p>
+  {:else}
+    <p class="cp-loading">loading…</p>
+  {/if}
 {:else}
   <form class="cp-form" onsubmit={save}>
     {#if form.description}<p class="desc">{form.description}</p>{/if}
@@ -45,9 +63,20 @@
       <label class="field" class:row={field.type === 'toggle'}>
         <span>{field.label}</span>
         {#if field.type === 'text'}
-          <input type="text" bind:value={values[field.key]} placeholder={field.placeholder ?? ''} />
+          <input
+            type="text"
+            bind:value={values[field.key]}
+            placeholder={field.placeholder ?? ''}
+            maxlength={field.maxlength ?? MAX_TEXT}
+            required={field.required}
+          />
         {:else if field.type === 'textarea'}
-          <textarea rows="3" bind:value={values[field.key]} placeholder={field.placeholder ?? ''}
+          <textarea
+            rows="3"
+            bind:value={values[field.key]}
+            placeholder={field.placeholder ?? ''}
+            maxlength={field.maxlength ?? MAX_TEXTAREA}
+            required={field.required}
           ></textarea>
         {:else if field.type === 'toggle'}
           <button

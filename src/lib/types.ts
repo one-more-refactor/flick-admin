@@ -96,6 +96,11 @@ export interface Field {
   label: string;
   type: 'text' | 'textarea' | 'toggle';
   placeholder?: string;
+  /** Character cap for text/textarea. Defaults: 1024 (text), 65536 (textarea).
+   *  Match the backend's limit so operators see it before the server does. */
+  maxlength?: number;
+  /** Browser-level "must not be empty" for text/textarea. */
+  required?: boolean;
 }
 
 export interface FormDef {

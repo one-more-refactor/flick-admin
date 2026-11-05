@@ -4,6 +4,7 @@
   import LineChart from './widgets/LineChart.svelte';
   import BarChart from './widgets/BarChart.svelte';
   import ListCard from './widgets/ListCard.svelte';
+  import { latest, refreshInterval } from './session';
 
   let {
     session,
@@ -21,22 +22,32 @@
   let error = $state('');
   let stamp = $state<Date | null>(null);
 
+  // A slow response from an earlier poll must not overwrite a newer one.
+  const req = latest();
+
   async function fetchData() {
+    const ticket = req.next();
     try {
-      data = await load(session);
+      const res = await load(session);
+      if (!req.isCurrent(ticket)) return;
+      data = res;
       stamp = new Date();
       error = '';
     } catch (err) {
+      if (!req.isCurrent(ticket)) return;
       error = err instanceof Error ? err.message : 'load failed';
     }
   }
 
   $effect(() => {
     fetchData();
-    if (refresh) {
-      const t = setInterval(fetchData, refresh * 1000);
-      return () => clearInterval(t);
-    }
+    // Clamped to MIN_REFRESH_SECS so a typo can't turn into an API flood.
+    const every = refreshInterval(refresh);
+    const t = every === null ? undefined : setInterval(fetchData, every * 1000);
+    return () => {
+      if (t !== undefined) clearInterval(t);
+      req.cancel();
+    };
   });
 </script>
 

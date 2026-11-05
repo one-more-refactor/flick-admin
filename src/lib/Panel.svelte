@@ -4,6 +4,7 @@
   import Dashboard from './Dashboard.svelte';
   import ResourceView from './ResourceView.svelte';
   import FormView from './FormView.svelte';
+  import { isValidSession, parseStoredSession } from './session';
 
   let { config }: { config: PanelConfig } = $props();
 
@@ -15,25 +16,21 @@
 
   let page = $derived(config.pages.find((p) => p.id === pageId) ?? config.pages[0]);
 
-  // Restore a persisted session; drop it if expired or rejected by check().
+  // Restore a persisted session; drop it if corrupt, malformed (e.g. `{}`),
+  // expired, or rejected by check(). check() is optional, so the shape check
+  // is what stops a hand-edited localStorage value from opening the shell.
   $effect(() => {
     const raw = localStorage.getItem(storeKey);
     if (!raw) {
       checking = false;
       return;
     }
-    let stored: Session | null = null;
-    try {
-      stored = JSON.parse(raw) as Session;
-    } catch {
-      localStorage.removeItem(storeKey);
-    }
-    if (!stored || (stored.expires_at && stored.expires_at * 1000 < Date.now())) {
+    const candidate = parseStoredSession(raw);
+    if (!candidate) {
       localStorage.removeItem(storeKey);
       checking = false;
       return;
     }
-    const candidate = stored;
     (config.auth.check ? config.auth.check(candidate) : Promise.resolve(true))
       .then((ok) => {
         if (ok) session = candidate;
@@ -72,6 +69,8 @@
   });
 
   function onlogin(s: Session) {
+    // A provider returning garbage must not produce a half-signed-in shell.
+    if (!isValidSession(s)) throw new Error('sign-in failed: the server returned no usable session');
     session = s;
     localStorage.setItem(storeKey, JSON.stringify(s));
   }

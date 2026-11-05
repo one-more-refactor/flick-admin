@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Resource, Session } from './types';
+  import { untrack } from 'svelte';
+  import { latest } from './session';
 
   let { session, resource }: { session: Session; resource: Resource } = $props();
 
@@ -13,18 +15,27 @@
   /** Row index whose danger action is awaiting the "sure?" click. */
   let confirming = $state<{ row: number; action: number } | null>(null);
 
+  // Latest request wins: typing "ab" then "abc" must never show "ab" results
+  // just because that response arrived last.
+  const req = latest();
+
   async function fetchRows() {
+    const ticket = req.next();
     busy = true;
     try {
       const res = await resource.load(session, { q, limit: pageSize, offset });
+      if (!req.isCurrent(ticket)) return;
       total = res.total;
       rows = res.rows;
       error = '';
     } catch (err) {
+      if (!req.isCurrent(ticket)) return;
       error = err instanceof Error ? err.message : 'load failed';
     } finally {
-      busy = false;
-      confirming = null;
+      if (req.isCurrent(ticket)) {
+        busy = false;
+        confirming = null;
+      }
     }
   }
 
@@ -38,18 +49,24 @@
   }
 
   async function runAction(ri: number, ai: number) {
+    // One action at a time: a double-click on "delete" must not fire twice,
+    // and a row index is only meaningful for the rows currently on screen.
+    if (busy) return;
     const action = resource.actions![ai];
     if (action.danger && (confirming?.row !== ri || confirming?.action !== ai)) {
       confirming = { row: ri, action: ai };
       return;
     }
     confirming = null;
+    busy = true;
     try {
       await action.run(session, rows[ri]);
-      await fetchRows();
     } catch (err) {
+      busy = false;
       error = err instanceof Error ? err.message : 'action failed';
+      return;
     }
+    await fetchRows();
   }
 
   function cell(row: any, col: (typeof resource.columns)[number]): string {
@@ -58,8 +75,16 @@
     return v === null || v === undefined ? '' : String(v);
   }
 
+  // Initial load only. fetchRows() reads `q` and `offset`; without untrack
+  // every keystroke re-ran this effect and fired an undebounced request with
+  // the old page offset. Searches go through onSearch(), paging through the
+  // pager buttons.
   $effect(() => {
-    fetchRows();
+    untrack(fetchRows);
+    return () => {
+      clearTimeout(searchTimer);
+      req.cancel();
+    };
   });
 </script>
 
@@ -103,6 +128,7 @@
                       class="act"
                       class:danger={action.danger}
                       type="button"
+                      disabled={busy}
                       onclick={() => runAction(ri, ai)}
                     >
                       {confirming?.row === ri && confirming?.action === ai ? 'sure?' : action.label}
@@ -124,7 +150,7 @@
     <div class="cp-pager">
       <button
         type="button"
-        disabled={offset === 0}
+        disabled={offset === 0 || busy}
         onclick={() => {
           offset = Math.max(0, offset - pageSize);
           fetchRows();
@@ -133,7 +159,7 @@
       <span>{offset + 1}–{Math.min(offset + pageSize, total)} of {total}</span>
       <button
         type="button"
-        disabled={offset + pageSize >= total}
+        disabled={offset + pageSize >= total || busy}
         onclick={() => {
           offset += pageSize;
           fetchRows();
