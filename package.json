@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "vite build",
     "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "bun test",
     "preview": "vite preview"
   },
   "dependencies": {
